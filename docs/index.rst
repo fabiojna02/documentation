@@ -34,8 +34,7 @@ Acumos Portal and Marketplace Users
 
    ../release-notes/index
    ../AcumosUser/portal-user/index
-   ../AcumosUser/portal-admin/user-guide
-
+   ../AcumosUser/portal-admin/index
 
 Acumos Operations
 =================
@@ -53,7 +52,7 @@ Contributors to the Acumos Platform Code
 The Acumos Platform Architecture Guide
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
 
     ../architecture/index
 
