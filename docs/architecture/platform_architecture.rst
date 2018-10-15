@@ -60,14 +60,49 @@ E4 - Admin APIs
 E5 - Federation APIs
 ....................
 
+The federation (public) E5 interface is a REST-based API specification.
+Any system that decides to federate needs to implement this interface, which
+assumes a pull-based mechanism.  As such, only the server side is defined by E5.
+The server allows clients to poll to discover solutions, and to retrieve solution
+metadata, solution artifacts and user-provided documents.
+See the following for more information:
+
+* :doc:`Federation Gateway <../../submodules/federation/docs/developer-guide>`
+
 E6 - Deployment APIs
 ....................
+
+The Deployment subsystem primarily consumes APIs of external systems such as
+cloud service environments, including Azure, OpenStack, and private kubernetes
+clouds. The developer guides for the "Deployers" that coordinate model
+deployment in those specific environments address the specific APIs consumed by
+those Deployers. See the following for more information:
+
+* :doc:`Acumos Azure Client <../../submodules/acumos-azure-client/docs/developer-guide>`
+* :doc:`Openstack Client <../../submodules/openstack-client/docs/developer-guide>`
+* :doc:`Kubernetes Client <../../submodules/kubernetes-client/docs/deploy-in-private-k8s>`
 
 Internal Interfaces and APIs
 ----------------------------
 
 Common Data Service
 ...................
+
+The Common Data Service provides a storage and query micro service for use by system
+components, backed by a relational database.  The API provides Create, Retrive, Update
+and Delete (CRUD) operations for system data including users, solutions, revisions,
+artifacts and more. The microservice endpoints and objects are documented extensively
+using code annotations that are published via Swagger in a running server, ensuring that
+the documentation is exactly synchronized with the implementation. View this API
+documentation in a running CDS instance at a URL like the following, but consult the
+server's configuration for the exact port number (e.g., "8000") and context path
+(e.g., "ccds") to use::
+
+    http://localhost:8000/ccds/swagger-ui.html
+
+See the following for more information:
+
+* :doc:`Common Data Service <../../submodules/common-dataservice/docs/server>`
 
 Hippo CMS
 .........
@@ -77,6 +112,14 @@ Portal Backend
 
 Federation Gateway
 ..................
+
+The federation (local) E5 interface is a REST-based API specification, just like the public
+interface.  This interface provides secure communication services to other components of the
+same Acumos instance, primarily used by the Portal.  The services include querying remote peers
+for their content and fetching that content as needed.
+See the following for more information:
+
+* :doc:`Federation Gateway <../../submodules/federation/docs/design>`
 
 Microservice Generation
 .......................
@@ -161,29 +204,218 @@ Proto Viewer ("Probe")
 Deployment
 ----------
 
+The deployment components enable users to launch models and solutions (composite
+models with additional supporting components) in various runtime environments,
+which are generally specific to the deployment component "client". These clients
+are invoked by user actions in the Portal, e.g. selecting a deployment target
+for a model in the various UI views where deployment is an option.
+
 Azure Client
 ............
+
+The Azure Client assists the user in deploying models into the Azure cloud
+service, as described in the :doc:`Deploy Acumos Model to Azure User Guide <../../AcumosUser/portal-user/deployment/deploy-to-azure>`.
+The Azure Client uses Azure APIs to perform actions such as creating a VM where
+the model will be deployed. The process depends upon a variety of prerequisite
+configuration steps by the user, as described in the user guide linked above.
+
+Once a VM has been created, the Azure Client executes commands on the VM to
+download and deploy the various model components. See the
+:doc:`Acumos Azure Client Developers Guide <../../submodules/acumos-azure-client/docs/developer-guide>`
+for more info.
+
+The Azure Client interacts with the following Acumos platform components and
+supporting services:
+
+* the :doc:`Portal <../../submodules/portal-marketplace/docs/index>`,
+  for which the Azure Client coordinates model deployment upon request by
+  the user
+* the :doc:`Nexus Client <../../submodules/acumos-nexus-client/docs/developer-guide>`,
+  which retrieves model artifacts from the Nexus maven repo
+* the :doc:`Common Data Service Client <../../submodules/common-dataservice/docs/client>`,
+  which retrieves model attributes stored in the CDS
+* the :doc:`Runtime Orchestrator <../../submodules/runtime-orchestrator/docs/index>`,
+  which the Azure Client configures with the information needed to route
+  protobuf messages through a set of composite model microservices
+* the :doc:`Data Broker <../../submodules/databroker/docs/index>`,
+  which the Azure Client configures with the information needed to ingest model
+  data into the model
+* the :doc:`Proto Viewer <../../submodules/proto-viewer/docs/index>`,
+  which the Azure Client configures with the information needed to display
+  model messages on the Proto Viewer web interface
+* the `Filebeat <https://www.elastic.co/products/beats/filebeat>`_ service,
+  which collects the log files created by the Azure Client, using a shared
+  volume
+* supporting services
+
+  * the docker-engine, which retrieves docker images from the Acumos platform
+    Nexus docker repo
+  * the Acumos project Nexus docker repo, for access to deployment components
+    such as the Runtime Orchestrator, Data Broker, and Proto Viewer
 
 Openstack Client
 ................
 
+The Openstack Client assists the user in deploying models into an Openstack
+based public cloud hosted by Rackspace, as described in the
+:doc:`Openstack Client Users Guide <../../submodules/openstack-client/docs/user-guide>`.
+The Openstack Client uses OpenStack APIs to perform actions such as creating a
+VM where the model will be deployed. The process depends upon a variety of
+prerequisite configuration steps by the user, as described in the user guide
+linked above.
+
+Once a VM has been created, the Openstack Client executes commands on the VM to
+download and deploy the various model components. See the
+:doc:`Openstack Client Developers Guide <../../submodules/openstack-client/docs/developer-guide>`
+for more info.
+
+The Openstack Client interacts with the following Acumos platform components and
+supporting services:
+
+* the :doc:`Portal <../../submodules/portal-marketplace/docs/index>`,
+  for which the OpenStack Client coordinates model deployment upon request by
+  the user
+* the :doc:`Nexus Client <../../submodules/acumos-nexus-client/docs/developer-guide>`,
+  which retrieves model artifacts from the Nexus maven repo
+* the :doc:`Common Data Service Client <../../submodules/common-dataservice/docs/client>`,
+  which retrieves model attributes stored in the CDS
+* the :doc:`Runtime Orchestrator <../../submodules/runtime-orchestrator/docs/index>`,
+  which the Openstack Client configures with the information needed to route
+  protobuf messages through a set of composite model microservices
+* the :doc:`Data Broker <../../submodules/databroker/docs/index>`,
+  which the Openstack Client configures with the information needed to ingest model
+  data into the model
+* the :doc:`Proto Viewer <../../submodules/proto-viewer/docs/index>`,
+  which the Openstack Client configures with the information needed to display
+  model messages on the Proto Viewer web interface
+* the `Filebeat <https://www.elastic.co/products/beats/filebeat>`_ service,
+  which collects the log files created by the Openstack Client, using a shared
+  volume
+* supporting services
+
+  * the docker-engine, which retrieves docker images from the Acumos platform
+    Nexus docker repo
+  * the Acumos project Nexus docker repo, for access to deployment components
+    such as the Runtime Orchestrator, Data Broker, and Proto Viewer
+
 Kubernetes Client
 .................
+
+The Kubernetes Client and associated tools assists the user in deploying models
+into a private kubernetes cloud, as described in
+:doc:`Acumos Solution Deployment in Private Kubernetes Cluster <../../submodules/kubernetes-client/docs/deploy-in-private-k8s>`.
+
+For a model that the user wants to deploy (via the "deploy to local" option),
+the Kubernetes Client generates a deployable solution package, which as described
+in the guide above, is downloaded by the user. After unpacking the solution
+package (zip file), the user then takes further actions on the host where the
+models will be deployed, using a set of support tools included in the downloaded
+solution package:
+
+* optionally installing a private kubernetes cluster (if not already existing)
+* deploying the model using an automated script, and the set of model artifacts
+  included in the solution package
+
+The Kubernetes Client interacts with the following Acumos platform components:
+
+* the :doc:`Portal <../../submodules/portal-marketplace/docs/index>`,
+  for which the Kubernetes Client coordinates model deployment upon request by
+  the user
+* the :doc:`Nexus Client <../../submodules/acumos-nexus-client/docs/developer-guide>`,
+  which retrieves model artifacts from the Nexus maven repo
+* the :doc:`Common Data Service Client <../../submodules/common-dataservice/docs/client>`,
+  which retrieves model attributes stored in the CDS
+* the `Filebeat <https://www.elastic.co/products/beats/filebeat>`_ service,
+  which collects the log files created by the Kubernetes Client, using a shared
+  volume
+
+The Kubernetes Client deployment support tool "deploy.sh" interacts with the
+following Acumos platform components and supporting services:
+
+* the :doc:`Runtime Orchestrator <../../submodules/runtime-orchestrator/docs/index>`,
+  which deploy.sh configures with the information needed to route
+  protobuf messages through a set of composite model microservices
+* the :doc:`Data Broker <../../submodules/databroker/docs/index>`,
+  which deploy.sh  configures with the information needed to ingest model
+  data into the model
+* the :doc:`Proto Viewer <../../submodules/proto-viewer/docs/index>`,
+  which deploy.sh configures with the information needed to display
+  model messages on the Proto Viewer web interface
+* supporting services
+
+  * the docker-engine, which retrieves docker images from the Acumos platform
+    Nexus docker repo
+  * the kubernetes master (via the kubectl client), to configure, manage,
+    and monitor the model components
+  * the Acumos project Nexus docker repo, for access to deployment components
+    such as the Runtime Orchestrator, Data Broker, and Proto Viewer
 
 Docker Proxy
 ............
 
+As described in
+:doc:`Acumos Solution Deployment in Private Kubernetes Cluster <../../submodules/kubernetes-client/docs/deploy-in-private-k8s>`,
+the Docker Proxy provides an authentication proxy for the Acumos platform docker
+repo. Apart from the use for model deployment into kubernetes, the Docker Proxy
+addresses a key need of Acumos platform users, and opportunities to enhance the
+other deployment clients related to:
+
+* the ability to retrieve model microservice docker images from the Acumos
+  platform using the normal process of "docker login" followed by "docker pull"
+
+Using the normal docker protocol for image download will enhance the simplicity,
+speed, efficiency, and reliability of:
+
+* user download of a model for local deployment, e.g. for local testing
+* deployment processes using the Azure and OpenStack clients, to be considered
+  as a feature enhancement in the Boreas release
+
+The Docker Proxy interacts with the following Acumos platform components and
+supporting services:
+
+* the Kubernetes Client deployment support tool "deploy.sh", for which the
+  Docker Proxy provides docker login and image pull services
+* supporting services
+
+  * The Nexus docker repo, from which the Docker Proxy pulls model microservice
+    images
+
 Catalog, Data Model and Data Management
 ---------------------------------------
+
+This project includes the Common Data Service, the Federation Gateway, and the Model Schema subprojects.
 
 Common Data Service
 ...................
 
+The Acumos Common Data Service provides a storage and query layer between Acumos system
+components and a relational database.
+The server component is a Java Spring-Boot application that provides REST service to callers
+and uses Hibernate to manage the persistent store.
+The client component is a Java library that provides business objects (models) and
+methods to simplify the use of the REST service.
+
+For more info: :doc:`../../submodules/common-dataservice/docs/index`
+
+
 Federation Gateway
 ..................
 
+The Federation Gateway component provides a mechanism to exchange models
+between two Acumos instances via a secure network channel.  The Gateway is
+implemented as a server that listens for requests on a REST API.  It also
+has a client feature that communicates with remote instances.
+
+For more info: :doc:`../../submodules/federation/docs/index`
+
 Model Schema
 ............
+
+The Model Schema is the JSON schema used to define and validate the Acumos model metadata generated by client libraries
+such as the Acumos python client library.
+
+For more info: :doc:`../../submodules/model-schema/docs/index`
+
 
 Common Services
 ---------------
@@ -229,7 +461,7 @@ Other Supporting Components
 ---------------------------
 
 MariaDB
-......
+.......
 
 Nexus
 .....

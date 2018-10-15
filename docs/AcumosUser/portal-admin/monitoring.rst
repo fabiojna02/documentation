@@ -16,17 +16,15 @@
 .. limitations under the License.
 .. ===============LICENSE_END=========================================================
 
-==========================
-On-Boarding a Python Model
-==========================
+.. _monitoring:
 
-The Acumos Python Client library is required for users who want to push their 
-TensorFlow and scikit-learn models to the Acumos Portal. You will use this 
-library for on-boarding all your models. The library creates meta-data by 
-introspection, packages all the necessary information, and then uploads it to 
-Acumos On-Boarding server. The Acumos Python Client library is packaged and 
-available on PyPI. Please see the `PyPI <https://pypi.org/project/acumos/>`_ 
-page for instructions and a tutorial.
+===============
+Site Monitoring
+===============
 
-To better know how to on-board a model using the  Web interface, 
-please have a look at the :doc:`Web Onboarding page <portal-onboarding-web>`
+Via the “Site Admin” / “Monitoring” tab, admins will be able to monitor
+various Acumos portal aspects such as user and modeler activity.
+
+This section of Site Admin is in development, and currently presents
+static data. This section will be updated as new features are
+implemented.
