@@ -22,6 +22,7 @@ Architecture Guide
 
 .. toctree::
    :maxdepth: 2
+   :numbered:
 
    intro.rst
    scope.rst

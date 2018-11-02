@@ -24,7 +24,7 @@ Architecture
 .. at least one entity-relationship diagram (classical architecture view)
 .. reference points in the architecture and related APIs, at a high level
 .. high-level description of each core component of the platform, and supporting
-.. components: what they are, scope, role, how they interact/communicate, 
+.. components: what they are, scope, role, how they interact/communicate,
 ..   links to component guides
 ..     -- images/component-architecture-2017.png is outdated
 .. images from wiki are in the images folder
@@ -32,10 +32,35 @@ Architecture
 Architecture Overview
 =====================
 
-.. image::  images/component-architecture-2017.png
+.. image::  images/acumos-architecture-athena.png
 
-Entity Relationships
-====================
+Component Interactions
+======================
+
+The following diagram shows the major dependencies among components of the
+Acumos architecture, and with external actors. The arrow represent dependency,
+e.g. upon APIs, user interfaces, etc. The arrows are directed at the provider
+of the dependency. Some dependencies are so common that they aren't shown
+directly, for diagram clarity. These include:
+
+* collection of logs from all components
+* dependency upon the Common Data Service (shown as a single block of components)
+
+The types of components/actors in the diagram are categorized as:
+
+* Core Component: components that are developed/packaged by the Acumos project,
+  and provide/enable core functions of the Acumos platform as a service
+* Supplemental Component: components that are integrated from upstream projects,
+  in some cases packaged as Acumos images, and provide supplemental/optional
+  support functions for the platform. These functions may be provided by other
+  components, or omitted from the platform deployment.
+* Platform Dependency: upstream components that are required, to support
+  key platform functions such as relational database and docker image creation.
+  The examples shown (Nexus and Docker) may be replaced with other components
+  that are API-compatible, and may be pre-existing, or shared with other
+  applications.
+* External Dependency: external systems/services that are required for the
+  related Acumos function to be fully usable
 
 .. image:: images/acumos-architecture-detail.png
 
@@ -54,6 +79,11 @@ See the :doc:`Onboading App <../../submodules/on-boarding/docs/index>` documenta
 E2 - Web APIs
 .............
 
+The portal Web API (E2) are the interface for the users to upload their models to the platform. It 
+provides means to share AI microservices along with information on how they perform. See the following for more information:
+
+* :doc:`Portal Web API <../../submodules/portal-marketplace/docs/developer-guide>`
+
 E3 - OA&M APIs
 ..............
 
@@ -65,6 +95,10 @@ collected by the logging subsystem.
 
 E4 - Admin APIs
 ...............
+
+The Admin API (E4) provides the interfaces to configure the site global parameters. See the following for more information:
+
+* :doc:`Portal Marketplace <../../submodules/portal-marketplace/docs/developer-guide>`
 
 E5 - Federation APIs
 ....................
@@ -141,8 +175,6 @@ See the following for more information:
 Microservice Generation
 .......................
 
-Security Verification
-.....................
 
 Azure Client
 ............
@@ -230,8 +262,6 @@ The kong proxy service is configured via the
 
 Core Components
 ===============
-.. high level description of the components and link to more info
-
 The following sections describe the scope, role, and interaction of the core
 Acumos platform components and component libraries. The sections are organized
 per the Acumos project teams that lead development on the components.
@@ -242,11 +272,23 @@ Portal and User Experience
 Portal Frontend
 ...............
 
+The Portal Frontend is designed to make it easy to discover, explore, and use AI models. It is completely built on 
+angularJs and HTML. It uses portal backend APIs to fetch the data and display.
+
 Portal Backend
 ..............
 
-Hippo CMS
-.........
+Provides REST endpoints and Swagger documentation. Portal backend is built on Spring Boot which exposes the endpoints to
+manage the models.
+
+For more information: :doc:`Portal Backend Documentation <../../submodules/portal-marketplace/docs/developer-guide>`
+
+Acumos Hippo CMS
+................
+
+Acumos Hippo CMS is a content management system which is used to store the images of the text descriptions for the Acumos instance.
+
+For more information: :doc:`Acumos Hippo CMS Documentation <../../submodules/acumos-hippo-cms/docs/developer-guide>`
 
 Model Onboarding
 ----------------
@@ -309,18 +351,81 @@ For more information: :doc:`R Client Documentation <../../submodules/acumos-r-cl
 
 Design Studio
 -------------
+The Design Studio component repository includes following components:
+
+* Composition Engine
+* TOSCA Model Generator Client
+* Generic Data Mapper Service
+* Data Broker (CSV and SQL)
+
+For more information: :doc:`Design Studio Documentation <../../submodules/design-studio/docs/index>`
+
+Additional components are in separate repositories.
 
 Design Studio Composition Engine
 ................................
 
+The Acumos Portal UI has a Design Studio that invokes the Composition Engine API to:
+
+#. Create machine learning applications (composite solutions) out of the basic building blocks – the individual Machine Learning (ML) models contributed by the user community
+#. Validate the composite solutions
+#. Generate the blueprint of the composite solution for deployment on the target cloud
+
+The :doc:`Design Studio Composition Engine
+<../../submodules/design-studio/docs/design-studio-user-guide>` is Spring Boot
+backend component which exposes REST APIs required to carry out CRUD operations
+on composite solutions.
+
+
+TOSCA Model Generator Client
+............................
+The TOSCA Model Generator Client is a library used by the Onboarding component
+to generate artifacts (TGIF.json, Protobuf.json) that are required by the Design Studio UI to perform
+operations on ML models, such as drag-drop, display input output ports, display meta
+data, etc.
+
+
+Generic Data Mapper Service
+...........................
+The Generic Data Mapper Service enables users to connect two ML models 'A' and 'B'
+where the number of output fields of model 'A' and input fields of model 'B'
+are the same.  The user is able to connect the field of model 'A' to required field
+of model 'B'. The Data Mapper performs data type transformations between
+Protobuf data types.
+
+
 Data Broker
 ...........
+At a high level, a Data Broker retrieves and converts the data into protobuf
+format. The Data Brokers retrieve data from the different types of sources like
+database, file systems (UNIX, HDFS Data Brokers, etc.), Router Data Broker, and
+zip archives.
 
-Runtime Orchestrator ("Model Connector")
-........................................
+The Design Studio provides the following Databrokers:
 
-Proto Viewer ("Probe")
-......................
+#. CSV DataBroker: used if source data resides in text file as a comma (,) separated fields.
+#. SQL DataBroker: used if source data is SQL Data base. Currently MYSQL database is supported.
+
+
+Runtime Orchestrator
+....................
+The Runtime Orchestrator (also called Blueprint Orchestrator or Model
+Connector) is used to orchestrate communication between the different models in
+a Composite AI/ML solution.
+
+For more information: :doc:`Runtime Orchestrator Documentation <../../submodules/runtime-orchestrator/docs/developer-guide>`.
+
+Proto Viewer
+............
+This component allows visualization of messages transferred in protobuf format.
+This is a passive component that shows the messages explicitly delivered to it;
+it does not listen ("sniff") all network traffic searching for protobuf data.
+Displaying the contents of a protobuf message requires the corresponding
+protocol buffer definition (.proto) file, which are fetched from a network
+server, usually a Nexus registry.
+
+
+For more information: :doc:`Proto Viewer Documentation <../../submodules/proto-viewer/docs/index>`.
 
 Deployment
 ----------
@@ -558,22 +663,22 @@ Generic Model Runner
 Python DCAE Model Runner
 ........................
 
-Security Verification
-.....................
 
-Supporting Components
-=====================
+Supplemental Components
+=======================
 .. high level description of the components and link to more info
 
-The following sections describe the scope, role, and interaction of supporting
-Acumos platform components and tools.
+The following sections describe the scope, role, and interaction of components
+that supplement the Acumos platform as deployed components and tools. These
+components and tools are developed and/or packaged by the Acumos project to
+provide supplemental support for the platform.
 
 Operations, Admin, and Maintenance (OAM)
 ----------------------------------------
 
 The Platform-OAM project maintains the repos providing:
 
-* Acumos platform deployment support tools 
+* Acumos platform deployment support tools
 * Logging and Analytics components based upon the
   `ELK Stack <https://www.elastic.co/elk-stack>`_, of which Acumos uses the
   open source versions
@@ -619,8 +724,13 @@ dashboards. It includes:
 
 See :doc:`Platform Operations, Administration, and Management (OA&M) User Guide <../../submodules/platform-oam/docs/user-guide.html>` for more info.
 
-Other Supporting Components
----------------------------
+External Components
+-------------------
+
+The following sections describe the scope, role, and interaction of
+externally-developed components that are deployed (some, optionally) as part of
+the Acumos platform or as container runtime environmments in which the Acumos
+platform is deployed.
 
 MariaDB
 .......
