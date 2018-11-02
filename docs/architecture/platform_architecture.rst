@@ -24,7 +24,7 @@ Architecture
 .. at least one entity-relationship diagram (classical architecture view)
 .. reference points in the architecture and related APIs, at a high level
 .. high-level description of each core component of the platform, and supporting
-.. components: what they are, scope, role, how they interact/communicate, 
+.. components: what they are, scope, role, how they interact/communicate,
 ..   links to component guides
 ..     -- images/component-architecture-2017.png is outdated
 .. images from wiki are in the images folder
@@ -32,10 +32,35 @@ Architecture
 Architecture Overview
 =====================
 
-.. image::  images/component-architecture-2017.png
+.. image::  images/acumos-architecture-athena.png
 
-Entity Relationships
-====================
+Component Interactions
+======================
+
+The following diagram shows the major dependencies among components of the
+Acumos architecture, and with external actors. The arrow represent dependency,
+e.g. upon APIs, user interfaces, etc. The arrows are directed at the provider
+of the dependency. Some dependencies are so common that they aren't shown
+directly, for diagram clarity. These include:
+
+* collection of logs from all components
+* dependency upon the Common Data Service (shown as a single block of components)
+
+The types of components/actors in the diagram are categorized as:
+
+* Core Component: components that are developed/packaged by the Acumos project,
+  and provide/enable core functions of the Acumos platform as a service
+* Supplemental Component: components that are integrated from upstream projects,
+  in some cases packaged as Acumos images, and provide supplemental/optional
+  support functions for the platform. These functions may be provided by other
+  components, or omitted from the platform deployment.
+* Platform Dependency: upstream components that are required, to support
+  key platform functions such as relational database and docker image creation.
+  The examples shown (Nexus and Docker) may be replaced with other components
+  that are API-compatible, and may be pre-existing, or shared with other
+  applications.
+* External Dependency: external systems/services that are required for the
+  related Acumos function to be fully usable
 
 .. image:: images/acumos-architecture-detail.png
 
@@ -48,14 +73,32 @@ External Interfaces and APIs
 E1 - Toolkit Onboarding
 .......................
 
+The various clients used to onboard models call the APIs in the Onboarding service.
+See the :doc:`Onboading App <../../submodules/on-boarding/docs/index>` documentation for details.
+
 E2 - Web APIs
 .............
+
+The portal Web API (E2) are the interface for the users to upload their models to the platform. It 
+provides means to share AI microservices along with information on how they perform. See the following for more information:
+
+* :doc:`Portal Web API <../../submodules/portal-marketplace/docs/developer-guide>`
 
 E3 - OA&M APIs
 ..............
 
+The OA&M subsystem defines data formats supported by the various logging
+and analytics support components described under
+`Operations, Admin, and Maintenance (OAM)`_. These are primarily focused on
+log formats that Acumos components will follow when saving log files that are
+collected by the logging subsystem.
+
 E4 - Admin APIs
 ...............
+
+The Admin API (E4) provides the interfaces to configure the site global parameters. See the following for more information:
+
+* :doc:`Portal Marketplace <../../submodules/portal-marketplace/docs/developer-guide>`
 
 E5 - Federation APIs
 ....................
@@ -81,6 +124,14 @@ those Deployers. See the following for more information:
 * :doc:`Acumos Azure Client <../../submodules/acumos-azure-client/docs/developer-guide>`
 * :doc:`Openstack Client <../../submodules/openstack-client/docs/developer-guide>`
 * :doc:`Kubernetes Client <../../submodules/kubernetes-client/docs/deploy-in-private-k8s>`
+
+Microservice Generation
+.......................
+
+The DCAE model API is intended to be used with models dedicated for ONAP. It builds a DCAE/ONAP
+microservice and required artifacts.
+See the :doc:`Microservice Generation <../../submodules/microservice-generation/docs/index>`
+documentation for details.
 
 Internal Interfaces and APIs
 ----------------------------
@@ -124,37 +175,93 @@ See the following for more information:
 Microservice Generation
 .......................
 
-Security Verification
-.....................
 
 Azure Client
 ............
 
+The Azure Client exposes two APIs that are used by the Portal-Markeplace to
+initiate model deployment in the Azure cloud service environment:
+
+* POST /azure/compositeSolutionAzureDeployment
+* POST /azure/singleImageAzureDeployment
+
+The Azure Client API URL is configured for the Portal-Markeplace in the Portal-FE
+component template (docker or kubernetes).
+
+See :doc:`Azure Client API <../../submodules/acumos-azure-client/docs/developer-guide>` for details.
+
 OpenStack Client
 ................
+
+The OpenStack Client exposes two APIs that are used by the Portal-Markeplace to
+initiate model deployment in an OpenStack service environment hosted by Rackspace:
+
+* POST /openstack/compositeSolutionOpenstackDeployment
+* POST /openstack/singleImageOpenstackDeployment
+
+The OpenStack Client API URL is configured for the Portal-Markeplace in the Portal-FE
+component template (docker or kubernetes).
+
+See :doc:`OpenStack Client API <../../submodules/openstack-client/docs/developer-guide>` for details.
 
 Kubernetes Client
 .................
 
-Component Logging
-.................
+The Kubernetes Client expose one API that is used by the Portal-Markeplace to
+provide the user with a downloadable deployment package for a model to be
+deployed in a private kubernetes service environment:
+
+* GET /getSolutionZip/{solutionId}/{revisionId}
+
+The Kubernetes Client API URL is configured for the Portal-Markeplace in the Portal-FE
+component template (docker or kubernetes).
+
+See :doc:`Kubernetes Client API <../../submodules/kubernetes-client/docs/deploy-in-private-k8s>` for details.
 
 ELK Stack
 .........
 
+The `ELK Stack <https://www.elastic.co/elk-stack>`_ is used to provide the
+`E3 - OA&M APIs`_ via which components publish standard-format log files for
+aggregation and presentation at operations dashboards.
+
 Nexus
 .....
+
+The Nexus component exposes two APIs enabling Acumos platform components to store
+and access artifacts in various repository types, including:
+
+* Maven (for generic artifacts)
+* docker (as a docker registry), using the
+  `Docker Registry HTTP API V2 <https://docs.docker.com/registry/spec/api/>`_
+
+The Maven repository service is accessed via an API exposed thru the
+`Nexus Client`_ Java library. The docker repository service is accessed via the
+`Docker Registry HTTP API V2 <https://docs.docker.com/registry/spec/api/>`_.
+Both services are configured for clients through URLs and credentials
+defined in the component template (docker or kubernetes).
 
 Docker
 ......
 
+The docker-engine is the primary service provided by `Docker-CE`_, as used in
+Acumos. The docker-engine is accessed by the
+`Docker Engine API <https://docs.docker.com/engine/api/v1.30/>`_.
+
+The docker-engine API URL is configured for Acumos components in the template
+(docker or kubernetes) for the referencing component.
+
 Kong
 ....
 
+`Kong <https://konghq.com/kong-community-edition/>`_ provides a reverse proxy
+service for Acumos platform functions exposed to users, such as the
+Portal-Marketplace UI and APIs, and the Onboarding service APIs.
+The kong proxy service is configured via the
+`Kong Admin API <https://docs.konghq.com/0.14.x/admin-api/>`_.
+
 Core Components
 ===============
-.. high level description of the components and link to more info
-
 The following sections describe the scope, role, and interaction of the core
 Acumos platform components and component libraries. The sections are organized
 per the Acumos project teams that lead development on the components.
@@ -165,11 +272,23 @@ Portal and User Experience
 Portal Frontend
 ...............
 
+The Portal Frontend is designed to make it easy to discover, explore, and use AI models. It is completely built on 
+angularJs and HTML. It uses portal backend APIs to fetch the data and display.
+
 Portal Backend
 ..............
 
-Hippo CMS
-.........
+Provides REST endpoints and Swagger documentation. Portal backend is built on Spring Boot which exposes the endpoints to
+manage the models.
+
+For more information: :doc:`Portal Backend Documentation <../../submodules/portal-marketplace/docs/developer-guide>`
+
+Acumos Hippo CMS
+................
+
+Acumos Hippo CMS is a content management system which is used to store the images of the text descriptions for the Acumos instance.
+
+For more information: :doc:`Acumos Hippo CMS Documentation <../../submodules/acumos-hippo-cms/docs/developer-guide>`
 
 Model Onboarding
 ----------------
@@ -177,29 +296,136 @@ Model Onboarding
 Onboarding App
 ..............
 
+The Onboarding app provides an ingestion interface for different types of
+models to enter the Acumos platform.  The solution for accommodating a myriad
+of different model types is to provide a custom wrapping library for each
+runtime. The client libraries encapsulate the complexity surrounding the
+serialization and deserialization of models.
+
+The Onboarding App interacts with the following Acumos platform components and
+supporting services:
+
+* the :doc:`Portal <../../submodules/portal-marketplace/docs/index>`,
+  which calls the Onboarding app during web-based model onboarding
+* the :doc:`Nexus Client <../../submodules/acumos-nexus-client/docs/developer-guide>`,
+  which stores and retrieves model artifacts from the Nexus maven repo
+* the :doc:`Common Data Service Client <../../submodules/common-dataservice/docs/client>`,
+  which stores model attributes
+* the :doc:`Microservice Generation <../../submodules/microservice-generation/docs/index>`, which creates the dockerized microservice
+
+For more information: :doc:`Onboading Documentation <../../submodules/onboarding/docs/index>`.
+
 Java Client
 ...........
 
+The Acumos Java Client is a Java client library used to on-board H2o.ai and
+Generic Java models. This library creates artifacts required by Acumos,
+packages them with the model in a bundle, and pushes the
+model bundle to the onboarding server.
+
+The Java Client interacts with the Onboading app.
+
+For more information: :doc:`Java Client Documentation <../../submodules/acumos-java-client/docs/index>`.
+
 Python Client
 .............
+The Acumos Java Client is a Python client library used to on-board Python
+models and more specifically Scikit learn, TensorFlow and TensorFlow/Keras
+models. It creates artifacts required by Acumos, packages them with the model
+in a bundle, and pushes the model bundle to the onboarding app.
+
+The Python Client interacts with the Onboading app.
+
+For more information: :doc:`Python Client Documentation <../../submodules/acumos-python-client/docs/index>`.
 
 R Client
 ........
+The R client is a R package that contains all the necessary functions to
+create a R model for Acumos. It creates artifacts required by Acumos, packages
+them with the model in a bundle, and pushes the model
+bundle to the onboarding app.
+
+The R Client interacts with the Onboading app.
+
+For more information: :doc:`R Client Documentation <../../submodules/acumos-r-client/docs/index>`.
 
 Design Studio
 -------------
+The Design Studio component repository includes following components:
+
+* Composition Engine
+* TOSCA Model Generator Client
+* Generic Data Mapper Service
+* Data Broker (CSV and SQL)
+
+For more information: :doc:`Design Studio Documentation <../../submodules/design-studio/docs/index>`
+
+Additional components are in separate repositories.
 
 Design Studio Composition Engine
 ................................
 
+The Acumos Portal UI has a Design Studio that invokes the Composition Engine API to:
+
+#. Create machine learning applications (composite solutions) out of the basic building blocks – the individual Machine Learning (ML) models contributed by the user community
+#. Validate the composite solutions
+#. Generate the blueprint of the composite solution for deployment on the target cloud
+
+The :doc:`Design Studio Composition Engine
+<../../submodules/design-studio/docs/design-studio-user-guide>` is Spring Boot
+backend component which exposes REST APIs required to carry out CRUD operations
+on composite solutions.
+
+
+TOSCA Model Generator Client
+............................
+The TOSCA Model Generator Client is a library used by the Onboarding component
+to generate artifacts (TGIF.json, Protobuf.json) that are required by the Design Studio UI to perform
+operations on ML models, such as drag-drop, display input output ports, display meta
+data, etc.
+
+
+Generic Data Mapper Service
+...........................
+The Generic Data Mapper Service enables users to connect two ML models 'A' and 'B'
+where the number of output fields of model 'A' and input fields of model 'B'
+are the same.  The user is able to connect the field of model 'A' to required field
+of model 'B'. The Data Mapper performs data type transformations between
+Protobuf data types.
+
+
 Data Broker
 ...........
+At a high level, a Data Broker retrieves and converts the data into protobuf
+format. The Data Brokers retrieve data from the different types of sources like
+database, file systems (UNIX, HDFS Data Brokers, etc.), Router Data Broker, and
+zip archives.
 
-Runtime Orchestrator ("Model Connector")
-........................................
+The Design Studio provides the following Databrokers:
 
-Proto Viewer ("Probe")
-......................
+#. CSV DataBroker: used if source data resides in text file as a comma (,) separated fields.
+#. SQL DataBroker: used if source data is SQL Data base. Currently MYSQL database is supported.
+
+
+Runtime Orchestrator
+....................
+The Runtime Orchestrator (also called Blueprint Orchestrator or Model
+Connector) is used to orchestrate communication between the different models in
+a Composite AI/ML solution.
+
+For more information: :doc:`Runtime Orchestrator Documentation <../../submodules/runtime-orchestrator/docs/developer-guide>`.
+
+Proto Viewer
+............
+This component allows visualization of messages transferred in protobuf format.
+This is a passive component that shows the messages explicitly delivered to it;
+it does not listen ("sniff") all network traffic searching for protobuf data.
+Displaying the contents of a protobuf message requires the corresponding
+protocol buffer definition (.proto) file, which are fetched from a network
+server, usually a Nexus registry.
+
+
+For more information: :doc:`Proto Viewer Documentation <../../submodules/proto-viewer/docs/index>`.
 
 Deployment
 ----------
@@ -423,6 +649,11 @@ Common Services
 Microservice Generation
 .......................
 
+The Microservice Generation component is in charge of dockerize the model, create the microservice and
+store artifacts in Nexus.
+
+For more information :doc:`Microservice Generation <../../submodules/microservice-generation/docs/index>`.
+
 Nexus Client
 ............
 
@@ -432,45 +663,147 @@ Generic Model Runner
 Python DCAE Model Runner
 ........................
 
-Security Verification
-.....................
 
-Supporting Components
-=====================
+Supplemental Components
+=======================
 .. high level description of the components and link to more info
 
-The following sections describe the scope, role, and interaction of supporting
-Acumos platform components and tools.
+The following sections describe the scope, role, and interaction of components
+that supplement the Acumos platform as deployed components and tools. These
+components and tools are developed and/or packaged by the Acumos project to
+provide supplemental support for the platform.
 
 Operations, Admin, and Maintenance (OAM)
 ----------------------------------------
 
+The Platform-OAM project maintains the repos providing:
+
+* Acumos platform deployment support tools
+* Logging and Analytics components based upon the
+  `ELK Stack <https://www.elastic.co/elk-stack>`_, of which Acumos uses the
+  open source versions
+
 System Integration
 ..................
+
+The `System Integration repo <https://github.com/acumos/system-integration>`_
+contains Acumos platform deployment support tools e.g.
+
+* Docker-compose templates for manual platform installation under docker-ce
+* Kubernetes templates for platform deployment in Azure-kubernetes
+* Oneclick / All-In-One (AIO) platform deployment under docker-ce or kubernetes
+
+  * See :doc:`One Click Deploy User Guide <../../AcumosUser/oneclick-deploy/user-guide>`
 
 Filebeat
 ........
 
+`Filebeat <https://www.elastic.co/products/beats/filebeat>`_ is a support
+component for the ELK stack. Filebeat monitors persistent volumes in which
+Acumos components save various log files, and aggregates those files for
+delivery to the Logstash service.
+
 Metricbeat
 ..........
+
+`Metricbeat <https://www.elastic.co/products/beats/metricbeat>`_ is a support
+component for the ELK stack. Metricbeat monitors host and process resources
+and delivers the to the Logstash service.
 
 ELK Stack
 .........
 
-Other Supporting Components
----------------------------
+The `ELK Stack <https://www.elastic.co/elk-stack>`_ provides the core services
+that archive, access, and present analytics and logs for operations support
+dashboards. It includes:
+
+* Logstash: a server-side data processing pipeline that ingests data from
+  multiple sources, transforms it, and then sends it to ElasticSearch for storage
+* ElasticSearch: a data storage, search, and analytics engine
+* Kibana: a visualization frontend for ElasticSearch based data
+
+See :doc:`Platform Operations, Administration, and Management (OA&M) User Guide <../../submodules/platform-oam/docs/user-guide.html>` for more info.
+
+External Components
+-------------------
+
+The following sections describe the scope, role, and interaction of
+externally-developed components that are deployed (some, optionally) as part of
+the Acumos platform or as container runtime environmments in which the Acumos
+platform is deployed.
 
 MariaDB
 .......
 
+`MariaDB <https://mariadb.org/>`_ is a relational database system. Acumos
+platform components that directly use MariaDB for database services include:
+
+* Common Data Service, for storage of platform data in the CDS database
+* Portal-Marketplace, for storage of Hippos CMS data
+* ELK stack, for access to platform user analytics
+
+Acumos platform components access the MariaDB service via a URL and credentials
+defined in the component template (docker or kubernetes).
+
 Nexus
 .....
+
+`Nexus <https://help.sonatype.com/repomanager3>`_ (Nexus 3) is used as an
+artifact repository, for
+
+* artifacts related to simple and composite models
+* model microservice docker images
+
+Acumos platform components that directly use Nexus for repository services
+include:
+
+* Design Studio
+* Onboarding
+* Azure Client
+* Microservice Generation
+* Portal-Marketplace
+* Federation
 
 Kong
 ....
 
+The `Kong Community Edition <https://docs.konghq.com/>`_ is an optional
+component used as needed as a reverse proxy for web and API requests to the
+platform. The primary web and API services exposed through the kong proxy are
+
+* the Onboarding service APIs (URL paths based upon /onboarding-app)
+* the Portal-Marketplace web frontend and APIs (all other URL paths)
+
 Docker-CE
 .........
 
+`Docker Community Edition <https://docs.docker.com/install/>`_ is used as a key
+component in the platform for the purposes:
+
+* accessing docker repositories, including the Acumos platform docker repository
+* building docker images
+* launching containers on request of the kubernetes master node
+
+The docker-engine is the main feature of Docker-CE used in Acumos, and is
+deployed:
+
+* for Docker-CE based platform deployments, on one of the platform hosts (e.g.
+  VMs or other machines)
+* for kubernetes based platform deployments, as a containerized service using the
+  `Docker-in-Docker (docker-dind) <https://hub.docker.com/_/docker/>`_
+  variant of the official docker images
+
 Kubernetes
 ..........
+
+Kubernetes provides a container management environment in which the Acumos
+platform (as a collection of docker image components) and models can be deployed.
+Kubernetes cluster installation tools are provided by the
+`kubernetes-client repo <https://github.com/acumos/kubernetes-client>`_, and can
+be used for establishing a private kubernetres cluster where the Acumos platform
+and models can be deployed. The
+:doc:`Acumos AIO <../../AcumosUser/oneclick-deploy/user-guide>` toolkit can
+deploy the Acumos platform in a private kubernetes cluster. For kubernetes
+clusters hosted by public cloud providers e.g. Azure, Acumos provides kubernetes
+templates for the Acumos platform components in the
+`system-integration <https://github.com/acumos/system-integration>`_ repo.

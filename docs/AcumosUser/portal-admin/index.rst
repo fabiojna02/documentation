@@ -22,6 +22,7 @@ Portal and Marketplace Admin Guide
 
 .. toctree::
    :maxdepth: 2
+   :numbered:
 
    intro.rst
    monitoring.rst
@@ -31,5 +32,6 @@ Portal and Marketplace Admin Guide
    federation.rst
    requests.rst
    configure_workflows.rst
+   addendum/index
 
 
