@@ -15,19 +15,10 @@
 .. See the License for the specific language governing permissions and
 .. limitations under the License.
 .. ===============LICENSE_END=========================================================
+.. THIS PAGE IS A HACK TO FIX LINKS TO 'LATEST' INSTEAD OF 'ATHENA' IN THE PORTAL UI
+.. THIS FILE SHOULD BE DELETED AFTER THE BOREAS BRANCH HAS BEEN CREATED
 
-=========================
-The Portal - For Modelers
-=========================
 
-.. toctree::
-   :maxdepth: 2
+Please click `here <https://docs.acumos.org/en/athena/AcumosUser/portal-user/index.html>`_ to view the Athena release version of the Portal and Marketplace User Guide.
 
-   portal-overview.rst
-   portal-onboarding-intro.rst
-   onboarding-r-guide.rst
-   onboarding-python-guide.rst
-   onboarding-java-guide.rst
-   portal-onboarding-web.rst
-   portal-my-models.rst
-   portal-manage-model.rst
+
